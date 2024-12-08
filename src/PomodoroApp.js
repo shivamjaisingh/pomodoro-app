@@ -202,11 +202,11 @@ const PomodoroApp = () => {
             {isRunning ? <Pause size={48} /> : <Play size={48} />}
           </button>
 
-          {/* New "Pause Session" button */}
+          {/* Updated "Pause Session" button with same color as "Reset Entire App and Session" */}
           <button
             onClick={pauseSession}
             title="Pause Session"
-            className="bg-yellow-100 text-yellow-700 p-7 rounded-full hover:bg-yellow-200 transition-colors relative shadow-xl font-semibold"
+            className="bg-red-100 text-red-600 p-7 rounded-full hover:bg-red-200 transition-colors relative shadow-xl font-semibold"
           >
             Pause Session
           </button>
