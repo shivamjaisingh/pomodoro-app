@@ -3,9 +3,9 @@ import { Timer, Play, Pause, RefreshCw, RotateCcw } from 'lucide-react';
 
 const PomodoroApp = () => {
   const configurations = {
-    pomodoro: 5,
-    shortBreak: 2,
-    longBreak: 2
+    pomodoro: 15,
+    shortBreak: 3,
+    longBreak: 5
   };
 
   const audioRef = useRef(null);
@@ -79,7 +79,6 @@ const PomodoroApp = () => {
     }
 
     if (mode === 'pomodoro') {
-      // After a pomodoro session completes, increment sessions
       setCompletedSessions((prev) => {
         const newCount = prev + 1;
         const nextMode = (newCount % 4 === 3) ? 'longBreak' : 'shortBreak';
@@ -136,6 +135,11 @@ const PomodoroApp = () => {
 
   const toggleTimer = () => {
     setIsRunning(prev => !prev);
+  };
+
+  const pauseSession = () => {
+    // Explicitly pause the timer
+    setIsRunning(false);
   };
 
   const changeMode = (newMode) => {
@@ -196,6 +200,15 @@ const PomodoroApp = () => {
             className="bg-blue-500 text-white p-7 rounded-full hover:bg-blue-600 transition-colors relative shadow-xl"
           >
             {isRunning ? <Pause size={48} /> : <Play size={48} />}
+          </button>
+
+          {/* New "Pause Session" button */}
+          <button
+            onClick={pauseSession}
+            title="Pause Session"
+            className="bg-yellow-100 text-yellow-700 p-7 rounded-full hover:bg-yellow-200 transition-colors relative shadow-xl font-semibold"
+          >
+            Pause Session
           </button>
           
           <button 
