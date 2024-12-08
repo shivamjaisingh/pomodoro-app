@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Timer, Play, Pause, RefreshCw, RotateCcw, Settings } from 'lucide-react';
+import { Timer, Play, Pause, RefreshCw, RotateCcw } from 'lucide-react';
 
 const PomodoroApp = () => {
   const configurations = {
@@ -8,29 +8,40 @@ const PomodoroApp = () => {
     longBreak: 15 * 60
   };
 
-  // Create a ref for the audio element
   const audioRef = useRef(null);
 
-  // Load initial state from localStorage or use default values
+  // Initialize states from localStorage or defaults
   const [mode, setMode] = useState(() => 
-    localStorage.getItem('pomodoroMode') || 'pomodoro'
+    typeof window !== 'undefined' ? localStorage.getItem('pomodoroMode') || 'pomodoro' : 'pomodoro'
   );
   const [timeLeft, setTimeLeft] = useState(() => {
-    const savedTimeLeft = localStorage.getItem('pomodoroTimeLeft');
-    return savedTimeLeft ? parseInt(savedTimeLeft) : configurations[mode];
+    if (typeof window !== 'undefined') {
+      const savedTimeLeft = localStorage.getItem('pomodoroTimeLeft');
+      return savedTimeLeft ? parseInt(savedTimeLeft, 10) : configurations[mode];
+    }
+    return configurations[mode];
   });
-  const [isRunning, setIsRunning] = useState(() => 
-    localStorage.getItem('pomodoroIsRunning') === 'true'
+  const [isRunning, setIsRunning] = useState(() =>
+    typeof window !== 'undefined' ? localStorage.getItem('pomodoroIsRunning') === 'true' : false
   );
   const [completedSessions, setCompletedSessions] = useState(() => {
-    const savedSessions = localStorage.getItem('pomodoroCompletedSessions');
-    return savedSessions ? parseInt(savedSessions) : 0;
+    if (typeof window !== 'undefined') {
+      const savedSessions = localStorage.getItem('pomodoroCompletedSessions');
+      return savedSessions ? parseInt(savedSessions, 10) : 0;
+    }
+    return 0;
   });
   
-  // Store the original time for each mode
   const [modeTimers, setModeTimers] = useState(() => {
-    const saved = localStorage.getItem('pomodoroModeTimers');
-    return saved ? JSON.parse(saved) : {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pomodoroModeTimers');
+      return saved ? JSON.parse(saved) : {
+        pomodoro: configurations.pomodoro,
+        shortBreak: configurations.shortBreak,
+        longBreak: configurations.longBreak
+      };
+    }
+    return {
       pomodoro: configurations.pomodoro,
       shortBreak: configurations.shortBreak,
       longBreak: configurations.longBreak
@@ -39,18 +50,20 @@ const PomodoroApp = () => {
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('pomodoroMode', mode);
-    localStorage.setItem('pomodoroTimeLeft', timeLeft.toString());
-    localStorage.setItem('pomodoroIsRunning', isRunning.toString());
-    localStorage.setItem('pomodoroCompletedSessions', completedSessions.toString());
-    localStorage.setItem('pomodoroModeTimers', JSON.stringify(modeTimers));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pomodoroMode', mode);
+      localStorage.setItem('pomodoroTimeLeft', timeLeft.toString());
+      localStorage.setItem('pomodoroIsRunning', isRunning.toString());
+      localStorage.setItem('pomodoroCompletedSessions', completedSessions.toString());
+      localStorage.setItem('pomodoroModeTimers', JSON.stringify(modeTimers));
+    }
   }, [mode, timeLeft, isRunning, completedSessions, modeTimers]);
 
   useEffect(() => {
     let interval = null;
     if (isRunning && timeLeft > 0) {
       interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+        setTimeLeft(prev => prev - 1);
       }, 1000);
     } else if (timeLeft === 0) {
       handleTimerComplete();
@@ -60,23 +73,30 @@ const PomodoroApp = () => {
   }, [isRunning, timeLeft]);
 
   const handleTimerComplete = () => {
-    // Play chime sound
+    // Play the chime sound if available
     if (audioRef.current) {
       audioRef.current.play();
     }
 
     setIsRunning(false);
+
     if (mode === 'pomodoro') {
-      setCompletedSessions(prev => prev + 1);
-      // Determine next mode based on completed sessions
-      setMode(completedSessions % 4 === 3 ? 'longBreak' : 'shortBreak');
+      // After a pomodoro session completes, increment sessions
+      setCompletedSessions((prev) => {
+        const newCount = prev + 1;
+        const nextMode = (newCount % 4 === 3) ? 'longBreak' : 'shortBreak';
+
+        // Update mode and timeLeft based on the new mode
+        setMode(nextMode);
+        setTimeLeft(configurations[nextMode]);
+
+        return newCount;
+      });
     } else {
-      // If in break mode (short or long), return to pomodoro
+      // If the current mode is a break, return to pomodoro mode
       setMode('pomodoro');
+      setTimeLeft(configurations.pomodoro);
     }
-    
-    // Set time left based on the new mode
-    setTimeLeft(configurations[mode === 'pomodoro' ? (completedSessions % 4 === 3 ? 'longBreak' : 'shortBreak') : 'pomodoro']);
   };
 
   const formatTime = (seconds) => {
@@ -91,16 +111,16 @@ const PomodoroApp = () => {
   };
 
   const resetApp = () => {
-    // Clear all localStorage items
-    localStorage.removeItem('pomodoroMode');
-    localStorage.removeItem('pomodoroTimeLeft');
-    localStorage.removeItem('pomodoroIsRunning');
-    localStorage.removeItem('pomodoroCompletedSessions');
-    localStorage.removeItem('pomodoroModeTimers');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('pomodoroMode');
+      localStorage.removeItem('pomodoroTimeLeft');
+      localStorage.removeItem('pomodoroIsRunning');
+      localStorage.removeItem('pomodoroCompletedSessions');
+      localStorage.removeItem('pomodoroModeTimers');
+    }
 
-    // Reset all states to initial values
     setMode('pomodoro');
-    setTimeLeft(25 * 60);
+    setTimeLeft(configurations.pomodoro);
     setIsRunning(false);
     setCompletedSessions(0);
     setModeTimers({
@@ -111,17 +131,17 @@ const PomodoroApp = () => {
   };
 
   const toggleTimer = () => {
-    setIsRunning(!isRunning);
+    setIsRunning(prev => !prev);
   };
 
   const changeMode = (newMode) => {
-    // Save the current mode's time before switching
+    // Save the current mode's remaining time
     setModeTimers(prev => ({
       ...prev,
       [mode]: timeLeft
     }));
 
-    // Switch to the new mode and use its saved time
+    // Switch mode and reset the timer to either the saved time or the default configuration time
     setMode(newMode);
     setIsRunning(false);
     setTimeLeft(modeTimers[newMode] || configurations[newMode]);
@@ -129,7 +149,7 @@ const PomodoroApp = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center p-4">
-      {/* Audio element for chime */}
+      {/* Ensure chime.mp3 is placed in the public folder */}
       <audio ref={audioRef} src="/chime.mp3" preload="auto" />
 
       <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 w-full max-w-xl">
@@ -139,8 +159,8 @@ const PomodoroApp = () => {
               key={timerMode}
               onClick={() => changeMode(timerMode)}
               title={`Switch to ${timerMode.charAt(0).toUpperCase() + timerMode.slice(1)} mode`}
-              className={`px-7 py-4 text-lg sm:text-xl rounded-2xl transition-all duration-300 group relative font-bold ${
-                mode === timerMode 
+              className={`px-7 py-4 text-lg sm:text-xl rounded-2xl transition-all duration-300 font-bold ${
+                mode === timerMode
                   ? 'bg-blue-500 text-white' 
                   : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
               }`}
@@ -169,7 +189,7 @@ const PomodoroApp = () => {
           <button 
             onClick={toggleTimer} 
             title={isRunning ? "Pause Timer" : "Start Timer"}
-            className="bg-blue-500 text-white p-7 rounded-full hover:bg-blue-600 transition-colors group relative shadow-xl"
+            className="bg-blue-500 text-white p-7 rounded-full hover:bg-blue-600 transition-colors relative shadow-xl"
           >
             {isRunning ? <Pause size={48} /> : <Play size={48} />}
           </button>
@@ -177,7 +197,7 @@ const PomodoroApp = () => {
           <button 
             onClick={resetTimer} 
             title="Reset Current Timer"
-            className="bg-blue-100 text-blue-600 p-7 rounded-full hover:bg-blue-200 transition-colors group relative shadow-xl"
+            className="bg-blue-100 text-blue-600 p-7 rounded-full hover:bg-blue-200 transition-colors relative shadow-xl"
           >
             <RefreshCw size={48} />
           </button>
@@ -185,7 +205,7 @@ const PomodoroApp = () => {
           <button 
             onClick={resetApp} 
             title="Reset Entire App and Session"
-            className="bg-red-100 text-red-600 p-7 rounded-full hover:bg-red-200 transition-colors group relative shadow-xl"
+            className="bg-red-100 text-red-600 p-7 rounded-full hover:bg-red-200 transition-colors relative shadow-xl"
           >
             <RotateCcw size={48} />
           </button>
