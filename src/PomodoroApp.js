@@ -130,7 +130,7 @@ const PomodoroApp = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center p-4">
       {/* Audio element for chime */}
-      <audio ref={audioRef} src="/api/placeholder/chime.mp3" preload="auto" />
+      <audio ref={audioRef} src="/chime.mp3" preload="auto" />
 
       <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 w-full max-w-xl">
         <div className="flex justify-between mb-8 space-x-4">
