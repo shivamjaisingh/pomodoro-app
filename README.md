@@ -1,3 +1,3 @@
-[Original pomodoro app]([url](https://en.wikipedia.org/wiki/Pomodoro_Technique))
+[Original pomodoro app](https://en.wikipedia.org/wiki/Pomodoro_Technique)
 
 Vercel link: https://pomodoro-app-xi-sepia.vercel.app/
