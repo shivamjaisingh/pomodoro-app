@@ -73,7 +73,6 @@ const PomodoroApp = () => {
   }, [isRunning, timeLeft]);
 
   const handleTimerComplete = () => {
-    // Play the chime sound if available
     if (audioRef.current) {
       audioRef.current.play();
     }
@@ -82,22 +81,14 @@ const PomodoroApp = () => {
       setCompletedSessions((prev) => {
         const newCount = prev + 1;
         const nextMode = (newCount % 4 === 3) ? 'longBreak' : 'shortBreak';
-
-        // Update mode and timeLeft based on the new mode
         setMode(nextMode);
         setTimeLeft(configurations[nextMode]);
-
-        // Automatically start the next timer
         setIsRunning(true);
-
         return newCount;
       });
     } else {
-      // If the current mode is a break, return to pomodoro mode
       setMode('pomodoro');
       setTimeLeft(configurations.pomodoro);
-
-      // Automatically start the next timer
       setIsRunning(true);
     }
   };
@@ -138,18 +129,15 @@ const PomodoroApp = () => {
   };
 
   const pauseSession = () => {
-    // Explicitly pause the timer
     setIsRunning(false);
   };
 
   const changeMode = (newMode) => {
-    // Save the current mode's remaining time
     setModeTimers(prev => ({
       ...prev,
       [mode]: timeLeft
     }));
 
-    // Switch mode and reset the timer to either the saved time or the default configuration time
     setMode(newMode);
     setIsRunning(false);
     setTimeLeft(modeTimers[newMode] || configurations[newMode]);
@@ -157,25 +145,35 @@ const PomodoroApp = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center p-4">
-      {/* Ensure chime.mp3 is placed in the public folder */}
       <audio ref={audioRef} src="/chime.mp3" preload="auto" />
 
       <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 w-full max-w-xl">
         <div className="flex justify-between mb-8 space-x-4">
-          {Object.keys(configurations).map((timerMode) => (
-            <button 
-              key={timerMode}
-              onClick={() => changeMode(timerMode)}
-              title={`Switch to ${timerMode.charAt(0).toUpperCase() + timerMode.slice(1)} mode`}
-              className={`px-7 py-4 text-lg sm:text-xl rounded-2xl transition-all duration-300 font-bold ${
-                mode === timerMode
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-              }`}
-            >
-              {timerMode.charAt(0).toUpperCase() + timerMode.slice(1)}
-            </button>
-          ))}
+          {Object.keys(configurations).map((timerMode) => {
+            let displayName;
+            if (timerMode === 'longBreak') {
+              displayName = 'Long Break';
+            } else if (timerMode === 'shortBreak') {
+              displayName = 'Short Break';
+            } else {
+              displayName = timerMode.charAt(0).toUpperCase() + timerMode.slice(1);
+            }
+
+            return (
+              <button 
+                key={timerMode}
+                onClick={() => changeMode(timerMode)}
+                title={`Switch to ${displayName} mode`}
+                className={`px-7 py-4 text-lg sm:text-xl rounded-2xl transition-all duration-300 font-bold ${
+                  mode === timerMode
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                }`}
+              >
+                {displayName}
+              </button>
+            );
+          })}
         </div>
 
         <div className="text-center mb-10">
@@ -202,7 +200,6 @@ const PomodoroApp = () => {
             {isRunning ? <Pause size={48} /> : <Play size={48} />}
           </button>
 
-          {/* Updated "Pause Session" button with same color as "Reset Entire App and Session" */}
           <button
             onClick={pauseSession}
             title="Pause Session"
