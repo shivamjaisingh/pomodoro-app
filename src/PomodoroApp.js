@@ -3,9 +3,9 @@ import { Timer, Play, Pause, RefreshCw, RotateCcw } from 'lucide-react';
 
 const PomodoroApp = () => {
   const configurations = {
-    pomodoro: 15,
-    shortBreak: 3,
-    longBreak: 5
+    pomodoro: 5,
+    shortBreak: 2,
+    longBreak: 2
   };
 
   const audioRef = useRef(null);
