@@ -3,9 +3,9 @@ import { Timer, Play, Pause, RefreshCw, RotateCcw } from 'lucide-react';
 
 const PomodoroApp = () => {
   const configurations = {
-    pomodoro: 15,
-    shortBreak: 3,
-    longBreak: 5
+    pomodoro: 5,
+    shortBreak: 2,
+    longBreak: 2
   };
 
   const audioRef = useRef(null);
@@ -78,8 +78,6 @@ const PomodoroApp = () => {
       audioRef.current.play();
     }
 
-    setIsRunning(false);
-
     if (mode === 'pomodoro') {
       // After a pomodoro session completes, increment sessions
       setCompletedSessions((prev) => {
@@ -90,12 +88,18 @@ const PomodoroApp = () => {
         setMode(nextMode);
         setTimeLeft(configurations[nextMode]);
 
+        // Automatically start the next timer
+        setIsRunning(true);
+
         return newCount;
       });
     } else {
       // If the current mode is a break, return to pomodoro mode
       setMode('pomodoro');
       setTimeLeft(configurations.pomodoro);
+
+      // Automatically start the next timer
+      setIsRunning(true);
     }
   };
 
